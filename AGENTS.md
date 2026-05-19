@@ -20,6 +20,9 @@ basekit/
 ├── src/basekit/
 │   ├── __init__.py
 │   ├── config_hook.py
+│   ├── discovery.py
+│   ├── docker_compose.py
+│   ├── docker_manager.py
 │   └── logging.py
 ├── tests/
 │   ├── test_config_hook.py
@@ -50,6 +53,24 @@ basekit/
 - `configure_default_logging()`: configures package logging only when no real handlers exist
 - `configure_sqlalchemy_logging()`: optional SQLAlchemy engine logging helper
 
+### `basekit.discovery`
+
+- `normalize_paths()`: normalizes strings, comma-separated strings, and lists
+- `DiscoveryFailure` / `DiscoveryError`: structured import failure reporting
+- `import_packages()` / `import_package_directory()` / `import_from_packages()`: generic import helpers
+
+### `basekit.docker_compose`
+
+- `DockerService`
+- `DockerVolume`
+- `DockerComposeGenerator`
+
+### `basekit.docker_manager`
+
+- `DockerCommandExecutor`: docker and docker-compose subprocess helpers
+- `DockerManager`: base class for service managers; requires injected `data_path`
+- `print_message()`, `validate_compose_file_exists()`, `format_connection_info()`
+
 ## Environment Variables
 
 - `CONFIG_HOOK`: optional hook path in `package.module:function_name` format. If the function name is omitted, `hook_config` is used.
@@ -75,6 +96,7 @@ uv build
 - When changing public behavior, update tests and the relevant guide in `docs/guides/`.
 - Use `monkeypatch` for environment-variable tests.
 - Be careful with logging tests because Python logging state is process-global.
+- Inject `data_path` into `DockerManager` subclasses; do not import consumer project config from basekit.
 - Prefer `pathlib.Path` for path logic.
 - Keep comments short and only where they clarify non-obvious behavior.
 

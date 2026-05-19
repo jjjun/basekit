@@ -32,6 +32,9 @@ Public exports live in `src/basekit/__init__.py`.
 Current public modules:
 
 - `basekit.config_hook`
+- `basekit.discovery`
+- `basekit.docker_compose`
+- `basekit.docker_manager`
 - `basekit.logging`
 
 ## Configuration Hook Contract
@@ -57,12 +60,19 @@ Invalid modules, missing functions, and non-callable targets raise `ConfigHookLo
 
 Do not reintroduce an undated active log file unless the public contract is intentionally changed and tests/docs are updated.
 
+## Docker Helper Contract
+
+`DockerManager` must not import configuration from consuming projects. Subclasses pass `data_path` into `super().__init__(data_path=...)`.
+
+`DockerCommandExecutor` wraps docker and docker-compose subprocess calls. Keep it stateless.
+
 ## Development Rules
 
 - Keep changes small and focused.
 - Add or update tests for public behavior changes.
 - Use `monkeypatch` for environment-variable tests.
 - Use `tmp_path` for filesystem tests.
+- Use injected paths for Docker manager tests.
 - Reset or clean up process-global logging state in tests that modify handlers.
 - Prefer `pathlib.Path` for filesystem paths.
 - Keep examples framework-neutral unless documenting a specific integration.

@@ -27,6 +27,9 @@ Treat exports in `src/basekit/__init__.py` as public API.
 Main modules:
 
 - `src/basekit/config_hook.py`
+- `src/basekit/discovery.py`
+- `src/basekit/docker_compose.py`
+- `src/basekit/docker_manager.py`
 - `src/basekit/logging.py`
 
 ## Coding Guidance
@@ -37,6 +40,7 @@ Main modules:
 - Use `pathlib.Path` for path handling.
 - Add tests for public behavior changes.
 - Keep logging setup opt-in and respectful of application-level handlers.
+- Keep Docker helpers free of consuming-project config imports; inject paths/settings.
 - Avoid hidden global side effects at import time beyond loading `.env`.
 
 ## Testing Guidance

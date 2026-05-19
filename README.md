@@ -6,6 +6,9 @@ Initial scope:
 
 - `basekit.config_hook`: shared `Config` base class and `CONFIG_HOOK` loader
 - `basekit.logging`: daily log file handler and opt-in logging setup helpers
+- `basekit.discovery`: generic package and module discovery helpers
+- `basekit.docker_compose`: small Docker Compose YAML generator
+- `basekit.docker_manager`: shared Docker command and service manager helpers
 
 ## Documentation
 
