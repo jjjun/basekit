@@ -11,6 +11,7 @@ basekit is a small shared foundation package for Python applications. It contain
 ## Current Scope
 
 - `basekit.config_hook`: `Config` base class and `CONFIG_HOOK` loader
+- `basekit.vault`: TOML-backed local vault helper
 - `basekit.logging`: date-named log file handler and opt-in logger setup helpers
 
 ## Maintenance Rules

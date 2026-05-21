@@ -5,6 +5,7 @@ Shared Python application foundation utilities.
 Initial scope:
 
 - `basekit.config_hook`: shared `Config` base class and `CONFIG_HOOK` loader
+- `basekit.vault`: small TOML-backed local vault helper
 - `basekit.logging`: daily log file handler and opt-in logging setup helpers
 - `basekit.discovery`: generic package and module discovery helpers
 - `basekit.docker_compose`: small Docker Compose YAML generator
