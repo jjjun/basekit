@@ -84,3 +84,13 @@ Do not reintroduce an undated active log file unless the public contract is inte
 - external coordination notes: `docs/proposals/`
 
 When a basekit change requires another project to change first or in parallel, create a proposal under `docs/proposals/` instead of turning that external work into a basekit issue.
+
+## Handoff protocol
+
+This repo uses the issuekit two-agent handoff. For the current steps, run
+`issuekit protocol --agent codex` for codex or `issuekit protocol --agent claude`
+for claude, or read the issuekit MCP server instructions / `get_protocol` tool.
+
+Do not copy the steps here; issuekit is the source of truth. Launch codex or
+Claude Code from the repo root so the MCP server resolves the correct
+`docs/issues/` directory.

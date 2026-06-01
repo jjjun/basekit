@@ -33,3 +33,8 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[tool.issuekit]
+recent_count = 30
+ascii_id_threshold = 1
+issues_dir = "docs/issues"
