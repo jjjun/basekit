@@ -81,9 +81,8 @@ Do not reintroduce an undated active log file unless the public contract is inte
 
 - Usage guides: `docs/guides/`
 - basekit implementation tasks: `docs/issues/`
-- external coordination notes: `docs/proposals/`
 
-When a basekit change requires another project to change first or in parallel, create a proposal under `docs/proposals/` instead of turning that external work into a basekit issue.
+When a basekit change requires another project to change first or in parallel, send a cross-project proposal with issuekit (`issuekit propose`) instead of turning that external work into a basekit issue. See `issuekit protocol`.
 
 ## Handoff protocol
 

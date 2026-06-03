@@ -29,8 +29,7 @@ basekit/
 │   └── test_logging.py
 ├── docs/
 │   ├── guides/
-│   ├── issues/
-│   └── proposals/
+│   └── issues/
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
@@ -104,22 +103,13 @@ uv build
 
 - `docs/guides/` contains user-facing usage guides.
 - `docs/issues/` contains basekit implementation tasks.
-- `docs/proposals/` contains temporary proposals for external projects/packages when basekit cannot complete the overall goal alone.
 
-## Proposal Management
+## Cross-Project Proposals
 
-Use `docs/proposals/` when work in basekit reveals that another project or package must change before the overall goal can be completed.
-
-When creating a proposal:
-
-1. Check Markdown files directly under `docs/proposals/`.
-2. Ignore `README.md` and `_template.md` when choosing the number.
-3. Use the next number after the current maximum, zero-padded to three digits.
-4. Copy `docs/proposals/_template.md` to `docs/proposals/NNN_<target>_<slug>.md`.
-5. Fill in why basekit cannot complete the change alone, what the target should change, and what follow-up remains in basekit.
-6. Continue implementing any part that can be handled inside basekit.
-
-Delete proposal files after the target project has accepted, rejected, or otherwise completed the proposal and basekit no longer needs the tracking note.
+When basekit work reveals that another project or package must change first, send
+a cross-project proposal with issuekit (`issuekit propose`), which writes into the
+target repo's `docs/issues/incoming/`. See `issuekit protocol` for the flow. Do
+not maintain a local `docs/proposals/` directory.
 
 ## Issue Management
 
@@ -134,7 +124,7 @@ When an issue is completed:
 - This project uses **uv**. Always use `uv run` when executing tests or tools.
 - Do not introduce dependencies unless the shared utility clearly needs them.
 - Avoid copying large repom-specific documentation into basekit.
-- If a change is primarily needed by repom, keep basekit generic and document any repom-side work as a proposal or follow-up.
+- If a change is primarily needed by repom, keep basekit generic and document any repom-side work as a follow-up.
 
 ## Handoff protocol
 
