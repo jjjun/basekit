@@ -102,7 +102,7 @@ uv build
 ## Documentation Guidelines
 
 - `docs/guides/` contains user-facing usage guides.
-- `docs/issues/` contains basekit implementation tasks.
+- Issues live in the issuekit API (`project = "basekit"`); see `docs/issues/README.md`.
 
 ## Cross-Project Proposals
 
@@ -113,11 +113,11 @@ not maintain a local `docs/proposals/` directory.
 
 ## Issue Management
 
-When an issue is completed:
-
-- Keep the file name unchanged.
-- Move the file from `docs/issues/active/` to `docs/issues/completed/`.
-- Update `docs/issues/README.md` to move the entry from active to completed.
+Issues are tracked in the issuekit API (`project = "basekit"`); there is no local
+`docs/issues/{active,completed,indexes}` tracker. Author with `issuekit author`
+(the API allocates the id) and let the API own claim/review/completion. The
+workflow steps are owned by issuekit: run `issuekit protocol --role <role>` (or
+the MCP `get_protocol` tool). See `docs/issues/README.md`.
 
 ## Notes For AI Assistants
 
@@ -133,5 +133,5 @@ This repo uses the issuekit two-agent handoff. For the current steps, run
 for claude, or read the issuekit MCP server instructions / `get_protocol` tool.
 
 Do not copy the steps here; issuekit is the source of truth. Launch codex or
-Claude Code from the repo root so the MCP server resolves the correct
-`docs/issues/` directory.
+Claude Code from the repo root so the MCP server resolves the repo configuration
+(the `project` key and API settings).

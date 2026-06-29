@@ -1,62 +1,36 @@
-# Issue Tracker - basekit
+# Issue Tracker (issuekit, API-backed)
 
-This directory tracks basekit implementation tasks and completed work records.
+Issue lifecycle for this repository lives in the issuekit mine-py API, project
+`basekit`. There is no local issue tracker anymore: the `active/`, `completed/`,
+and `indexes/` trees were retired. The API allocates issue ids and owns the
+claim, review, approval, and completion transitions.
 
-## Directory Structure
+The workflow steps are owned by issuekit and are the single source of truth. Run
+`issuekit protocol --role <role>` (or use the MCP `get_protocol` tool). Do not
+duplicate the steps here.
 
-```text
-docs/issues/
-├── README.md
-├── active/
-│   └── NNN_*.md
-└── completed/
-    └── NNN_*.md
+## Configuration
+
+- `[tool.issuekit] project = "basekit"` is committed in `pyproject.toml`.
+- `ISSUEKIT_API_URL` (and credentials) come from the environment. Run
+  `issuekit login` once to cache a token.
+
+## Common commands
+
+```powershell
+issuekit info                 # tracker status for project=basekit
+issuekit queue                # claimable / review queue
+issuekit author --title "Short title" --body-file issue.md --priority medium --agent codex
+issuekit implement <id> --agent <name>
+issuekit approve <id> --reviewer <name> --verification "uv run pytest"
 ```
 
-## Lifecycle
+The API allocates the issue id (`basekit#<id>`); do not create files or count
+ids by hand. Issue text is English ASCII.
 
-```text
-active/     -> planned or in progress
-completed/  -> implemented, tested, and documented
-```
+## This directory now
 
-Keep the issue ID unchanged when moving a file from `active/` to `completed/`.
-
-## Active Issues
-
-No active issues are currently tracked.
-
-## Completed Issues
-
-No completed issues are currently tracked.
-
-## Creating A New Issue
-
-1. Check `active/` and `completed/` for the current maximum issue number.
-2. Create `active/NNN_short_slug.md` using the next zero-padded number.
-3. Keep the file focused on one change or investigation.
-4. Update this README when the issue is created or completed.
-
-## Issue Template
-
-```markdown
-# Issue #NNN: Title
-
-**Status**: Not Started / Proposed / In Progress / Completed
-
-**Created**: YYYY-MM-DD
-
-**Priority**: High / Medium / Low
-
-## Problem
-
-## Proposed Solution
-
-## Impact
-
-## Implementation Plan
-
-## Test Plan
-
-## Related Files
-```
+Only `docs/issues/incoming/` remains: the local inbox for cross-project
+proposals (`issuekit propose --to <repo>`), which are still file-based until the
+proposal flow is migrated. Adopt one with `issuekit adopt <file>` to create an
+API issue.
