@@ -35,6 +35,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.issuekit]
+project = "basekit"
 recent_count = 30
 ascii_id_threshold = 1
 issues_dir = "docs/issues"
