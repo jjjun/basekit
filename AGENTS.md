@@ -102,13 +102,13 @@ uv build
 ## Documentation Guidelines
 
 - `docs/guides/` contains user-facing usage guides.
-- Issues live in the issuekit API (`project = "basekit"`); see `docs/issues/README.md`.
+- Issues live in the issuekit API (`project = "basekit"`); run `issuekit protocol` for the flow.
 
 ## Cross-Project Proposals
 
 When basekit work reveals that another project or package must change first, send
-a cross-project proposal with issuekit (`issuekit propose`), which writes into the
-target repo's `docs/issues/incoming/`. See `issuekit protocol` for the flow. Do
+a cross-project proposal with issuekit (`issuekit propose`), which posts to the
+target project's API proposal inbox. See `issuekit protocol` for the flow. Do
 not maintain a local `docs/proposals/` directory.
 
 ## Issue Management
@@ -117,7 +117,7 @@ Issues are tracked in the issuekit API (`project = "basekit"`); there is no loca
 `docs/issues/{active,completed,indexes}` tracker. Author with `issuekit author`
 (the API allocates the id) and let the API own claim/review/completion. The
 workflow steps are owned by issuekit: run `issuekit protocol --role <role>` (or
-the MCP `get_protocol` tool). See `docs/issues/README.md`.
+the MCP `get_protocol` tool).
 
 ## Notes For AI Assistants
 

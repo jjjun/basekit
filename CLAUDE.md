@@ -80,7 +80,7 @@ Do not reintroduce an undated active log file unless the public contract is inte
 ## Documentation
 
 - Usage guides: `docs/guides/`
-- basekit issues: tracked in the issuekit API (`project = "basekit"`); see `docs/issues/README.md`
+- basekit issues: tracked in the issuekit API (`project = "basekit"`); run `issuekit protocol` for the flow
 
 When a basekit change requires another project to change first or in parallel, send a cross-project proposal with issuekit (`issuekit propose`) instead of turning that external work into a basekit issue. See `issuekit protocol`.
 
