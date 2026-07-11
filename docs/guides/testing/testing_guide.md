@@ -12,6 +12,14 @@ Run all tests:
 uv run pytest
 ```
 
+The default run is intentionally quiet to reduce agent context usage. Failure
+tracebacks and assertion details remain available. For verbose output during
+diagnosis, override the default options:
+
+```bash
+uv run pytest -o addopts="-v"
+```
+
 Run a single test module:
 
 ```bash

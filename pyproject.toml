@@ -30,6 +30,7 @@ line-length = 88
 select = ["I"]
 
 [tool.pytest.ini_options]
+addopts = "-q"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
