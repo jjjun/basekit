@@ -71,7 +71,7 @@ class DateNamedDailyFileHandler(logging.FileHandler):
         for _, path in candidates[self.backup_count :]:
             try:
                 path.unlink()
-            except FileNotFoundError:
+            except OSError:
                 continue
 
 

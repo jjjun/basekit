@@ -57,3 +57,31 @@ def test_make_handler_writes_to_dated_active_file(tmp_path, monkeypatch):
     assert active_file.exists()
     assert not (tmp_path / "main").exists()
     assert "active file message" in active_file.read_text(encoding="utf-8")
+
+
+def test_handler_writes_when_log_cleanup_cannot_delete_file(tmp_path, monkeypatch):
+    current_date = date(2026, 5, 5)
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: current_date,
+    )
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"), backup_count=1)
+    old_log_file = tmp_path / "main_2026-05-05.log"
+    real_unlink = type(old_log_file).unlink
+
+    def raise_permission_error(path, *args, **kwargs):
+        if path == old_log_file:
+            raise PermissionError
+        return real_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(type(old_log_file), "unlink", raise_permission_error)
+    current_date = date(2026, 5, 6)
+
+    handler.emit(logging.makeLogRecord({"msg": "rotated file message"}))
+    handler.flush()
+    handler.close()
+
+    active_file = tmp_path / "main_2026-05-06.log"
+    assert "rotated file message" in active_file.read_text(encoding="utf-8")
