@@ -30,7 +30,16 @@ class DateNamedDailyFileHandler(logging.FileHandler):
     def emit(self, record: logging.LogRecord) -> None:
         today = self._today()
         if today != self.current_date:
-            self._switch_to_date(today)
+            try:
+                self._switch_to_date(today)
+            except Exception:
+                self.handleError(record)
+        if self.stream is None and (self.mode != "w" or not self._closed):
+            try:
+                self.stream = self._open()
+            except Exception:
+                self.handleError(record)
+                return
         super().emit(record)
 
     def _today(self) -> date:

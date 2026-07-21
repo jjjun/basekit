@@ -85,3 +85,55 @@ def test_handler_writes_when_log_cleanup_cannot_delete_file(tmp_path, monkeypatc
 
     active_file = tmp_path / "main_2026-05-06.log"
     assert "rotated file message" in active_file.read_text(encoding="utf-8")
+
+
+def test_handler_does_not_raise_when_date_switch_fails(tmp_path, monkeypatch):
+    current_date = date(2026, 5, 5)
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: current_date,
+    )
+    monkeypatch.setattr(logging, "raiseExceptions", False)
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"))
+
+    def raise_runtime_error(target_date):
+        raise RuntimeError
+
+    monkeypatch.setattr(handler, "_switch_to_date", raise_runtime_error)
+    current_date = date(2026, 5, 6)
+
+    handler.emit(logging.makeLogRecord({"msg": "rotation failure message"}))
+    handler.flush()
+    handler.close()
+
+    active_file = tmp_path / "main_2026-05-05.log"
+    assert "rotation failure message" in active_file.read_text(encoding="utf-8")
+
+
+def test_handler_does_not_raise_when_rotated_file_cannot_open(tmp_path, monkeypatch):
+    current_date = date(2026, 5, 5)
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: current_date,
+    )
+    monkeypatch.setattr(logging, "raiseExceptions", False)
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"))
+
+    def raise_permission_error():
+        raise PermissionError
+
+    monkeypatch.setattr(handler, "_open", raise_permission_error)
+    current_date = date(2026, 5, 6)
+
+    handler.emit(logging.makeLogRecord({"msg": "first rotated file open failure"}))
+    handler.emit(logging.makeLogRecord({"msg": "second rotated file open failure"}))
+    handler.close()
+
+    old_active_file = tmp_path / "main_2026-05-05.log"
+    rotated_file = tmp_path / "main_2026-05-06.log"
+    assert old_active_file.read_text(encoding="utf-8") == ""
+    assert not rotated_file.exists()
