@@ -65,4 +65,6 @@ Add tests when:
 - error messages or exception types become part of the expected contract
 - path or environment handling changes
 
-Avoid adding app-specific fixtures to this repository. Integration examples for consuming projects belong in that project's tests or in `docs/proposals/` when a coordinated change is needed.
+Avoid adding app-specific fixtures to this repository. Integration examples
+for consuming projects belong in that project's tests. Send coordinated work to
+the owning project's issuekit proposal inbox.

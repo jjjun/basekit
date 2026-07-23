@@ -4,31 +4,36 @@ basekit guides are practical references for developers and AI agents working wit
 
 ## Guide Categories
 
-### [config/](config/)
+### [Configuration hooks](config/config_hook_guide.md)
 
 - `Config` base class
 - `CONFIG_HOOK` loading
 - path customization patterns
 
-### [logging/](logging/)
+### [Vault](vault_guide.md)
+
+- local TOML loading
+- named section access
+
+### [Logging](logging/logging_guide.md)
 
 - daily date-named log files
 - package logger setup
 - optional SQLAlchemy engine logging
 
-### discovery
+### [Discovery](discovery_guide.md)
 
 - generic package and module discovery
 - structured import failures
 - optional post-import hooks
 
-### docker
+### Docker
 
-- simple Docker Compose YAML generation
-- shared Docker command helpers
+- [Simple Docker Compose YAML generation](docker_compose_guide.md)
+- [Shared Docker command and service manager helpers](docker_manager_guide.md)
 - injectable Docker service manager base class
 
-### [testing/](testing/)
+### [Testing](testing/testing_guide.md)
 
 - test command conventions
 - environment variable handling

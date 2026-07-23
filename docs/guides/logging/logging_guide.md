@@ -87,5 +87,5 @@ Valid levels are currently `INFO` and `DEBUG`; unknown values fall back to `INFO
 
 ## Related Files
 
-- `src/basekit/logging.py`
-- `tests/test_logging.py`
+- [Implementation](../../../src/basekit/logging.py)
+- [Tests](../../../tests/test_logging.py)

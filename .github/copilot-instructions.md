@@ -31,6 +31,7 @@ Main modules:
 - `src/basekit/docker_compose.py`
 - `src/basekit/docker_manager.py`
 - `src/basekit/logging.py`
+- `src/basekit/vault.py`
 
 ## Coding Guidance
 
@@ -53,7 +54,7 @@ Main modules:
 ## Documentation Guidance
 
 - Update `docs/guides/` when changing documented behavior.
-- Use `docs/issues/` for basekit work items.
-- Use `docs/proposals/` for changes needed in external projects such as repom.
+- Track basekit work in the issuekit API (`project = "basekit"`).
+- Send changes owned by external projects to their issuekit proposal inbox.
 
 Do not copy repom-specific behavior into basekit unless it is clearly a generic foundation utility.

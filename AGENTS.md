@@ -23,13 +23,17 @@ basekit/
 │   ├── discovery.py
 │   ├── docker_compose.py
 │   ├── docker_manager.py
-│   └── logging.py
+│   ├── logging.py
+│   └── vault.py
 ├── tests/
 │   ├── test_config_hook.py
-│   └── test_logging.py
+│   ├── test_discovery.py
+│   ├── test_docker_compose.py
+│   ├── test_docker_manager.py
+│   ├── test_logging.py
+│   └── test_vault.py
 ├── docs/
-│   ├── guides/
-│   └── issues/
+│   └── guides/
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
@@ -51,6 +55,11 @@ basekit/
 - `get_logger()`: opt-in package logger setup helper
 - `configure_default_logging()`: configures package logging only when no real handlers exist
 - `configure_sqlalchemy_logging()`: optional SQLAlchemy engine logging helper
+
+### `basekit.vault`
+
+- `Vault`: reads complete TOML mappings or named top-level values from an
+  injected local file path
 
 ### `basekit.discovery`
 

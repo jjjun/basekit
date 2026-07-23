@@ -114,5 +114,5 @@ Avoid tests that depend on a developer's shell environment.
 
 ## Related Files
 
-- `src/basekit/config_hook.py`
-- `tests/test_config_hook.py`
+- [Implementation](../../../src/basekit/config_hook.py)
+- [Tests](../../../tests/test_config_hook.py)

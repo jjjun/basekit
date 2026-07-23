@@ -54,5 +54,5 @@ Initialization files are stored below:
 
 ## Related Files
 
-- `src/basekit/docker_manager.py`
-- `tests/test_docker_manager.py`
+- [Implementation](../../src/basekit/docker_manager.py)
+- [Tests](../../tests/test_docker_manager.py)

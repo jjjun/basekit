@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-basekit is a small shared Python foundation package. It provides reusable configuration hook and logging utilities for packages and applications.
+basekit is a small shared Python foundation package. It provides reusable
+configuration, local vault, logging, discovery, and Docker utilities for
+packages and applications.
 
 The package should stay generic. Do not add behavior that only makes sense for one consuming project.
 
@@ -36,6 +38,7 @@ Current public modules:
 - `basekit.docker_compose`
 - `basekit.docker_manager`
 - `basekit.logging`
+- `basekit.vault`
 
 ## Configuration Hook Contract
 

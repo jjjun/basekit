@@ -47,5 +47,5 @@ import_from_packages(
 
 ## Related Files
 
-- `src/basekit/discovery.py`
-- `tests/test_discovery.py`
+- [Implementation](../../src/basekit/discovery.py)
+- [Tests](../../tests/test_discovery.py)

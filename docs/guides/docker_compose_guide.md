@@ -31,5 +31,5 @@ The generator writes straightforward YAML strings. For highly dynamic or nested 
 
 ## Related Files
 
-- `src/basekit/docker_compose.py`
-- `tests/test_docker_compose.py`
+- [Implementation](../../src/basekit/docker_compose.py)
+- [Tests](../../tests/test_docker_compose.py)
