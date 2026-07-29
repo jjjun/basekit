@@ -1,6 +1,6 @@
 [project]
 name = "basekit"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Shared Python application foundation utilities"
 authors = [{ name = "jj", email = "soft.management943@gmail.com" }]
 readme = "README.md"
@@ -22,6 +22,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/basekit"]
+
+[tool.hatch.version]
+path = "src/basekit/__init__.py"
 
 [tool.ruff]
 line-length = 88

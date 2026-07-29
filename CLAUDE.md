@@ -31,6 +31,11 @@ uv build
 
 Public exports live in `src/basekit/__init__.py`.
 
+Any addition to the public surface, including a new public module, package-root
+export, or public parameter, requires a minor version bump. Treat that bump as
+part of the completion criteria for the change. Consumers should declare a
+version floor such as `basekit>=0.2.0` instead of relying on a lockfile revision.
+
 Current public modules:
 
 - `basekit.config_hook`

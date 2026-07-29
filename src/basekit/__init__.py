@@ -1,5 +1,7 @@
 """Shared Python application foundation utilities."""
 
+__version__ = "0.2.0"
+
 from basekit.config_hook import (
     Config,
     ConfigHookLoadError,
@@ -13,6 +15,7 @@ from basekit.logging import DateNamedDailyFileHandler, make_timed_rotating_handl
 from basekit.vault import Vault
 
 __all__ = [
+    "__version__",
     "Config",
     "ConfigHookLoadError",
     "DateNamedDailyFileHandler",
