@@ -53,6 +53,10 @@ When the function name is omitted, basekit loads `hook_config`.
 
 Invalid modules, missing functions, and non-callable targets raise `ConfigHookLoadError`.
 
+`load_hook_function()` accepts a `source` name for error messages and a
+`default_function` for colonless paths. Pass `default_function=None` to require
+the explicit `package.module:function_name` form.
+
 ## Logging Contract
 
 `DateNamedDailyFileHandler` writes directly to the date-named active file:

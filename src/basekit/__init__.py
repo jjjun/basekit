@@ -1,6 +1,11 @@
 """Shared Python application foundation utilities."""
 
-from basekit.config_hook import Config, ConfigHookLoadError, get_config_from_hook
+from basekit.config_hook import (
+    Config,
+    ConfigHookLoadError,
+    get_config_from_hook,
+    load_hook_function,
+)
 from basekit.discovery import DiscoveryError, DiscoveryFailure
 from basekit.docker_compose import DockerComposeGenerator, DockerService, DockerVolume
 from basekit.docker_manager import DockerCommandExecutor, DockerManager
@@ -19,6 +24,7 @@ __all__ = [
     "DockerService",
     "DockerVolume",
     "get_config_from_hook",
+    "load_hook_function",
     "make_timed_rotating_handler",
     "Vault",
 ]

@@ -45,7 +45,8 @@ basekit/
 
 - `Config`: generic base configuration class
 - `get_config_from_hook()`: applies the `CONFIG_HOOK` function if configured
-- `load_hook_function()`: imports a hook function from `module:function`
+- `load_hook_function()`: imports a hook function from `module:function`; accepts
+  a `source` error label and an optional `default_function` for colonless paths
 - `ConfigHookLoadError`: raised for invalid hook configuration
 
 ### `basekit.logging`

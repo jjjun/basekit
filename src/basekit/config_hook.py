@@ -13,36 +13,45 @@ load_dotenv()
 
 
 class ConfigHookLoadError(RuntimeError):
-    """Raised when CONFIG_HOOK points to an invalid hook."""
+    """Raised when a configured hook target is invalid."""
 
 
-def load_hook_function(hook_path: str):
+def load_hook_function(
+    hook_path: str,
+    source: str = "CONFIG_HOOK",
+    default_function: str | None = "hook_config",
+):
     """Load a config hook function from ``module.path:function_name``."""
     if ":" in hook_path:
         module_path, function_name = hook_path.rsplit(":", 1)
     else:
         module_path = hook_path
-        function_name = "hook_config"
+        if default_function is None:
+            raise ConfigHookLoadError(
+                f"Config hook target from {source}='{hook_path}' must use "
+                "'module:function_name' format"
+            )
+        function_name = default_function
 
     try:
         module = importlib.import_module(module_path)
     except ImportError as exc:
         raise ConfigHookLoadError(
             f"Failed to import config hook module '{module_path}' "
-            f"from CONFIG_HOOK='{hook_path}': {exc}"
+            f"from {source}='{hook_path}': {exc}"
         ) from exc
 
     if not hasattr(module, function_name):
         raise ConfigHookLoadError(
             f"Config hook function '{function_name}' was not found in module "
-            f"'{module_path}' (CONFIG_HOOK='{hook_path}')"
+            f"'{module_path}' ({source}='{hook_path}')"
         )
 
     hook_function = getattr(module, function_name)
     if not callable(hook_function):
         raise ConfigHookLoadError(
             f"Config hook target '{module_path}:{function_name}' is not callable "
-            f"(CONFIG_HOOK='{hook_path}')"
+            f"({source}='{hook_path}')"
         )
     return hook_function
 

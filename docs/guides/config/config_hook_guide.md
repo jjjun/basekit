@@ -7,7 +7,12 @@
 ## Public API
 
 ```python
-from basekit.config_hook import Config, ConfigHookLoadError, get_config_from_hook
+from basekit import (
+    Config,
+    ConfigHookLoadError,
+    get_config_from_hook,
+    load_hook_function,
+)
 ```
 
 `Config` currently provides:
@@ -47,6 +52,20 @@ When `CONFIG_HOOK` is unset or blank, `get_config_from_hook()` returns the origi
 - `package.module`
 
 When the function name is omitted, `hook_config` is used.
+
+`load_hook_function()` is also available for settings other than `CONFIG_HOOK`.
+Use `source` to identify the setting in error messages:
+
+```python
+hook = load_hook_function(path, source="pre_migration_hook")
+```
+
+Colonless paths use `hook_config` by default. Set `default_function` to choose a
+different callable name, or pass `default_function=None` to require the
+explicit `package.module:function_name` form.
+
+Importing `basekit.config_hook`, including through the top-level `basekit`
+exports, calls `load_dotenv()` and may populate `os.environ` from a `.env` file.
 
 Example:
 
