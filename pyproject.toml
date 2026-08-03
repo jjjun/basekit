@@ -46,3 +46,7 @@ project = "basekit"
 recent_count = 30
 ascii_id_threshold = 1
 issues_dir = "docs/issues"
+
+[tool.issuekit.triage]
+author_agent = "codex"
+trusted_origins = ["fast-domain"]
