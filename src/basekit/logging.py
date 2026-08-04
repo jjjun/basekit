@@ -104,23 +104,24 @@ def has_logging_handlers(logger_name: str) -> bool:
 def configure_default_logging(
     logger_name: str,
     log_file_path: Optional[str],
+    level: int = logging.DEBUG,
 ) -> bool:
     """Configure a package root logger when the application has no handlers."""
     if has_logging_handlers(logger_name) or not log_file_path:
         return False
 
     root_logger = logging.getLogger(logger_name)
-    root_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(level)
 
     file_handler = make_timed_rotating_handler(log_file_path)
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(level)
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     )
     root_logger.addHandler(file_handler)
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(max(level, logging.INFO))
     console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
     root_logger.addHandler(console_handler)
     return True
@@ -170,6 +171,7 @@ def get_logger(
     log_file_path: Optional[str] = None,
     sqlalchemy_echo: bool = False,
     sqlalchemy_echo_level: str = "INFO",
+    level: int = logging.DEBUG,
 ) -> logging.Logger:
     """Return a logger and optionally configure package default handlers."""
     global _sqlalchemy_logging_initialized
@@ -177,7 +179,7 @@ def get_logger(
     logger = logging.getLogger(f"{logger_name}.{name}")
 
     if logger_name not in _configured_logger_names:
-        if configure_default_logging(logger_name, log_file_path):
+        if configure_default_logging(logger_name, log_file_path, level):
             _configured_logger_names.add(logger_name)
 
     if sqlalchemy_echo and not _sqlalchemy_logging_initialized:

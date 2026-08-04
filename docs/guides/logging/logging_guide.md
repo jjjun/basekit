@@ -33,18 +33,26 @@ from basekit.logging import (
 ## Basic Usage
 
 ```python
+import logging
+
 from basekit.logging import get_logger
 
 logger = get_logger(
     "worker",
     logger_name="my_package",
     log_file_path="data/my_package/logs/main",
+    level=logging.INFO,
 )
 
 logger.info("started")
 ```
 
 The logger name is `my_package.worker`.
+
+Pass `level` to `get_logger()` or `configure_default_logging()` to set the
+package logger and file handler threshold. It defaults to `logging.DEBUG`.
+The console handler uses `max(level, logging.INFO)`, so it remains at `INFO`
+with the default and follows higher thresholds such as `WARNING`.
 
 ## Handler Behavior
 

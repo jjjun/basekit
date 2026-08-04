@@ -1,3 +1,4 @@
+import logging
 import sys
 from types import ModuleType
 
@@ -130,3 +131,39 @@ def test_config_computes_data_and_log_paths(tmp_path):
     assert config.log_file_path == str(
         tmp_path / "data" / "example" / "logs" / config.log_file
     )
+
+
+def test_config_log_level_defaults_by_execution_environment(monkeypatch):
+    monkeypatch.delenv("LOG_LEVEL", raising=False)
+
+    assert Config(exec_env="dev").log_level == logging.DEBUG
+    assert Config(exec_env="prod").log_level == logging.INFO
+
+
+def test_config_log_level_uses_environment_override(monkeypatch):
+    monkeypatch.setenv("LOG_LEVEL", "warning")
+
+    assert Config(exec_env="dev").log_level == logging.WARNING
+    assert Config(exec_env="prod").log_level == logging.WARNING
+
+
+def test_config_log_level_rejects_invalid_environment_override(monkeypatch):
+    monkeypatch.setenv("LOG_LEVEL", "bogus")
+
+    with pytest.raises(ValueError, match="LOG_LEVEL.*bogus"):
+        Config().log_level
+
+
+@pytest.mark.parametrize("value", ["", "   "])
+def test_config_log_level_ignores_blank_environment_override(monkeypatch, value):
+    monkeypatch.setenv("LOG_LEVEL", value)
+
+    assert Config(exec_env="prod").log_level == logging.INFO
+
+
+def test_config_log_level_setter_overrides_environment(monkeypatch):
+    monkeypatch.setenv("LOG_LEVEL", "warning")
+    config = Config(exec_env="prod")
+    config.log_level = logging.ERROR
+
+    assert config.log_level == logging.ERROR

@@ -5,6 +5,7 @@ import pytest
 
 from basekit.logging import (
     DateNamedDailyFileHandler,
+    configure_default_logging,
     get_logger,
     make_timed_rotating_handler,
     reset_logging_state,
@@ -35,6 +36,90 @@ def test_get_logger_can_configure_custom_namespace(tmp_path):
     active_log_file = tmp_path / f"main_{date.today().isoformat()}.log"
     assert active_log_file.exists()
     assert "example.test" in active_log_file.read_text(encoding="utf-8")
+
+
+def test_get_logger_uses_configured_level_for_file_output(tmp_path):
+    reset_logging_state()
+    root_logger = logging.getLogger("example_level")
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    try:
+        logger = get_logger(
+            "test",
+            logger_name="example_level",
+            log_file_path=str(tmp_path / "main"),
+            level=logging.INFO,
+        )
+        logger.debug("debug message")
+        logger.info("info message")
+
+        active_log_file = tmp_path / f"main_{date.today().isoformat()}.log"
+        contents = active_log_file.read_text(encoding="utf-8")
+        assert "debug message" not in contents
+        assert "info message" in contents
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+        reset_logging_state()
+
+
+def test_configure_default_logging_uses_level_for_console_handler(tmp_path):
+    root_logger = logging.getLogger("example_warning")
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    try:
+        assert configure_default_logging(
+            "example_warning",
+            str(tmp_path / "main"),
+            level=logging.WARNING,
+        )
+        console_handler = next(
+            handler
+            for handler in root_logger.handlers
+            if isinstance(handler, logging.StreamHandler)
+            and not isinstance(handler, logging.FileHandler)
+        )
+
+        assert root_logger.level == logging.WARNING
+        assert console_handler.level == logging.WARNING
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+
+
+def test_configure_default_logging_defaults_to_debug_file_and_info_console(tmp_path):
+    root_logger = logging.getLogger("example_default_level")
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    try:
+        assert configure_default_logging("example_default_level", str(tmp_path / "main"))
+        file_handler = next(
+            handler
+            for handler in root_logger.handlers
+            if isinstance(handler, logging.FileHandler)
+        )
+        console_handler = next(
+            handler
+            for handler in root_logger.handlers
+            if isinstance(handler, logging.StreamHandler)
+            and not isinstance(handler, logging.FileHandler)
+        )
+
+        assert root_logger.level == logging.DEBUG
+        assert file_handler.level == logging.DEBUG
+        assert console_handler.level == logging.INFO
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
 
 
 @pytest.mark.parametrize(

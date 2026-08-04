@@ -1,5 +1,6 @@
 import copy
 import importlib
+import logging
 import os
 import shutil
 import time
@@ -76,6 +77,7 @@ class Config:
     _data_path: Optional[str] = field(default=None, init=False, repr=False)
     _log_path: Optional[str] = field(default=None, init=False, repr=False)
     _log_file: Optional[str] = field(default=None, init=False, repr=False)
+    _log_level: Optional[int] = field(default=None, init=False, repr=False)
 
     def _get_or_default(self, private_attr: str, default_value):
         value = getattr(self, private_attr, None)
@@ -166,6 +168,26 @@ class Config:
     @log_file.setter
     def log_file(self, value: Optional[str]):
         self._log_file = value
+
+    @property
+    def log_level(self) -> int:
+        if self._log_level is not None:
+            return self._log_level
+
+        configured_level = os.getenv("LOG_LEVEL")
+        if configured_level is not None:
+            configured_level = configured_level.strip()
+            if configured_level:
+                level = logging.getLevelNamesMapping().get(configured_level.upper())
+                if level is None:
+                    raise ValueError(f"Invalid LOG_LEVEL value: {configured_level!r}")
+                return level
+
+        return logging.INFO if self.exec_env == "prod" else logging.DEBUG
+
+    @log_level.setter
+    def log_level(self, value: Optional[int]):
+        self._log_level = value
 
     @property
     def log_file_path(self) -> Optional[str]:

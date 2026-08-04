@@ -1,6 +1,6 @@
 """Shared Python application foundation utilities."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from basekit.config_hook import (
     Config,
