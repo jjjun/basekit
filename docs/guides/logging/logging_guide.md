@@ -26,6 +26,7 @@ from basekit.logging import (
     get_logger,
     has_logging_handlers,
     make_timed_rotating_handler,
+    reset_logging_state,
 )
 ```
 
@@ -61,6 +62,10 @@ Old dated logs are removed after `backup_count` files. The default is `30`.
 
 `configure_default_logging()` checks existing root handlers and package handlers before adding file and console handlers. This keeps basekit-friendly packages from overriding application-level logging configuration.
 
+When called through `get_logger()`, default configuration is attempted once per `logger_name`, rather than once per process. A call without `log_file_path` does not consume that attempt, so a later call for the same package can configure logging when it supplies a path. `configure_default_logging()` returns `True` when it installs handlers and `False` when it declines to configure them.
+
+SQLAlchemy echo configuration remains process-global, but a later `get_logger()` call can enable it even if an earlier caller left `sqlalchemy_echo` disabled.
+
 ## SQLAlchemy Logging
 
 SQLAlchemy engine logging can be enabled explicitly:
@@ -81,7 +86,7 @@ Valid levels are currently `INFO` and `DEBUG`; unknown values fall back to `INFO
 
 ## Testing Notes
 
-- Reset `basekit.logging._logger_initialized` in focused tests when verifying first-time setup.
+- Call `basekit.logging.reset_logging_state()` in focused tests when verifying first-time setup.
 - Remove handlers created during tests to avoid leaking logging state across test cases.
 - Use `tmp_path` for log file paths.
 

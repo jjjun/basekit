@@ -1,10 +1,13 @@
 import logging
 from datetime import date
 
+import pytest
+
 from basekit.logging import (
     DateNamedDailyFileHandler,
     get_logger,
     make_timed_rotating_handler,
+    reset_logging_state,
 )
 
 
@@ -16,9 +19,7 @@ def test_get_logger_returns_basekit_logger():
 
 
 def test_get_logger_can_configure_custom_namespace(tmp_path):
-    import basekit.logging as logging_module
-
-    logging_module._logger_initialized = False
+    reset_logging_state()
     root_logger = logging.getLogger("example")
     for handler in root_logger.handlers[:]:
         handler.close()
@@ -34,6 +35,134 @@ def test_get_logger_can_configure_custom_namespace(tmp_path):
     active_log_file = tmp_path / f"main_{date.today().isoformat()}.log"
     assert active_log_file.exists()
     assert "example.test" in active_log_file.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("first_name", "second_name"),
+    [("pkg_a", "pkg_b"), ("pkg_b", "pkg_a")],
+)
+def test_get_logger_configures_each_package_namespace(
+    tmp_path, first_name, second_name
+):
+    reset_logging_state()
+    logger_names = (first_name, second_name)
+    root_loggers = [logging.getLogger(name) for name in logger_names]
+    for root_logger in root_loggers:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+
+    try:
+        for logger_name in logger_names:
+            logger = get_logger(
+                "worker",
+                logger_name=logger_name,
+                log_file_path=str(tmp_path / logger_name),
+            )
+            logger.info(f"{logger_name} message")
+
+        for logger_name in logger_names:
+            active_log_file = tmp_path / f"{logger_name}_{date.today().isoformat()}.log"
+            assert active_log_file.exists()
+            assert f"{logger_name}.worker" in active_log_file.read_text(
+                encoding="utf-8"
+            )
+    finally:
+        for root_logger in root_loggers:
+            for handler in root_logger.handlers[:]:
+                handler.close()
+                root_logger.removeHandler(handler)
+        reset_logging_state()
+
+
+def test_get_logger_configures_a_namespace_only_once(tmp_path):
+    reset_logging_state()
+    root_logger = logging.getLogger("example_once")
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    try:
+        for name in ("first", "second"):
+            get_logger(
+                name,
+                logger_name="example_once",
+                log_file_path=str(tmp_path / "main"),
+            )
+
+        assert len(root_logger.handlers) == 2
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+        reset_logging_state()
+
+
+def test_get_logger_can_configure_after_missing_log_file_path(tmp_path):
+    reset_logging_state()
+    root_logger = logging.getLogger("late_path")
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    try:
+        get_logger("first", logger_name="late_path")
+        get_logger(
+            "second",
+            logger_name="late_path",
+            log_file_path=str(tmp_path / "main"),
+        )
+
+        assert len(root_logger.handlers) == 2
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+        reset_logging_state()
+
+
+def test_get_logger_respects_application_basic_configuration(tmp_path):
+    root_logger = logging.getLogger()
+    original_handlers = root_logger.handlers[:]
+    original_level = root_logger.level
+    root_logger.handlers.clear()
+    logging.basicConfig()
+    reset_logging_state()
+
+    package_loggers = [logging.getLogger(name) for name in ("app_a", "app_b")]
+    try:
+        get_logger(
+            "worker", logger_name="app_a", log_file_path=str(tmp_path / "unused_a")
+        )
+        get_logger(
+            "worker", logger_name="app_b", log_file_path=str(tmp_path / "unused_b")
+        )
+
+        assert all(not logger.handlers for logger in package_loggers)
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+        root_logger.handlers = original_handlers
+        root_logger.setLevel(original_level)
+        reset_logging_state()
+
+
+def test_get_logger_can_enable_sqlalchemy_after_echo_was_disabled(monkeypatch):
+    import basekit.logging as logging_module
+
+    reset_logging_state()
+    calls = []
+    monkeypatch.setattr(
+        logging_module,
+        "configure_sqlalchemy_logging",
+        lambda **kwargs: calls.append(kwargs),
+    )
+
+    get_logger("first", logger_name="sqlalchemy_first")
+    get_logger("second", logger_name="sqlalchemy_second", sqlalchemy_echo=True)
+    get_logger("third", logger_name="sqlalchemy_third", sqlalchemy_echo=True)
+
+    assert calls == [{"enabled": True, "echo_level": "INFO", "log_file_path": None}]
 
 
 def test_make_handler_writes_to_dated_active_file(tmp_path, monkeypatch):

@@ -3,7 +3,7 @@ from datetime import date
 from pathlib import Path
 from typing import Optional
 
-_logger_initialized = False
+_configured_logger_names: set[str] = set()
 _sqlalchemy_logging_initialized = False
 
 
@@ -104,10 +104,10 @@ def has_logging_handlers(logger_name: str) -> bool:
 def configure_default_logging(
     logger_name: str,
     log_file_path: Optional[str],
-) -> None:
+) -> bool:
     """Configure a package root logger when the application has no handlers."""
     if has_logging_handlers(logger_name) or not log_file_path:
-        return
+        return False
 
     root_logger = logging.getLogger(logger_name)
     root_logger.setLevel(logging.DEBUG)
@@ -123,6 +123,7 @@ def configure_default_logging(
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
     root_logger.addHandler(console_handler)
+    return True
 
 
 def configure_sqlalchemy_logging(
@@ -171,23 +172,31 @@ def get_logger(
     sqlalchemy_echo_level: str = "INFO",
 ) -> logging.Logger:
     """Return a logger and optionally configure package default handlers."""
-    global _logger_initialized, _sqlalchemy_logging_initialized
+    global _sqlalchemy_logging_initialized
 
     logger = logging.getLogger(f"{logger_name}.{name}")
 
-    if not _logger_initialized:
-        _logger_initialized = True
-        configure_default_logging(logger_name, log_file_path)
+    if logger_name not in _configured_logger_names:
+        if configure_default_logging(logger_name, log_file_path):
+            _configured_logger_names.add(logger_name)
 
-        if not _sqlalchemy_logging_initialized:
-            _sqlalchemy_logging_initialized = True
-            configure_sqlalchemy_logging(
-                enabled=sqlalchemy_echo,
-                echo_level=sqlalchemy_echo_level,
-                log_file_path=log_file_path,
-            )
+    if sqlalchemy_echo and not _sqlalchemy_logging_initialized:
+        _sqlalchemy_logging_initialized = True
+        configure_sqlalchemy_logging(
+            enabled=True,
+            echo_level=sqlalchemy_echo_level,
+            log_file_path=log_file_path,
+        )
 
     return logger
+
+
+def reset_logging_state() -> None:
+    """Reset logging setup state for tests that need first-time configuration."""
+    global _sqlalchemy_logging_initialized
+
+    _configured_logger_names.clear()
+    _sqlalchemy_logging_initialized = False
 
 
 __all__ = [
@@ -197,4 +206,5 @@ __all__ = [
     "get_logger",
     "has_logging_handlers",
     "make_timed_rotating_handler",
+    "reset_logging_state",
 ]

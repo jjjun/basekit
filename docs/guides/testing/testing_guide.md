@@ -49,9 +49,9 @@ Do not rely on persistent shell values such as `CONFIG_HOOK` or `EXEC_ENV` in te
 Logging state is process-global. Tests that verify first-time logger setup should restore state and remove handlers they create.
 
 ```python
-import basekit.logging as logging_module
+from basekit.logging import reset_logging_state
 
-logging_module._logger_initialized = False
+reset_logging_state()
 ```
 
 Use `tmp_path` for file output and close handlers before assertions that inspect files.
