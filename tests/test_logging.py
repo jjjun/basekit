@@ -10,6 +10,7 @@ from basekit.logging import (
     DateNamedDailyFileHandler,
     configure_default_logging,
     get_logger,
+    has_logging_handlers,
     make_timed_rotating_handler,
     reset_logging_state,
 )
@@ -232,6 +233,153 @@ def test_get_logger_respects_application_basic_configuration(tmp_path):
             handler.close()
         root_logger.handlers = original_handlers
         root_logger.setLevel(original_level)
+        reset_logging_state()
+
+
+@pytest.mark.parametrize("placement", ["package", "root"])
+def test_marked_non_output_handler_does_not_prevent_default_logging(
+    tmp_path, placement
+):
+    logger_name = f"marked_{placement}"
+    package_logger = logging.getLogger(logger_name)
+    root_logger = logging.getLogger()
+    original_root_handlers = root_logger.handlers[:]
+    original_root_level = root_logger.level
+    marked_handler = logging.Handler()
+    marked_handler.basekit_configures_output = False
+    for handler in package_logger.handlers[:]:
+        handler.close()
+        package_logger.removeHandler(handler)
+    root_logger.handlers.clear()
+    reset_logging_state()
+
+    try:
+        (package_logger if placement == "package" else root_logger).addHandler(
+            marked_handler
+        )
+
+        assert configure_default_logging(logger_name, str(tmp_path / "main"))
+        assert any(
+            isinstance(handler, DateNamedDailyFileHandler)
+            for handler in package_logger.handlers
+        )
+    finally:
+        for handler in package_logger.handlers[:]:
+            handler.close()
+            package_logger.removeHandler(handler)
+        marked_handler.close()
+        root_logger.handlers = original_root_handlers
+        root_logger.setLevel(original_root_level)
+        reset_logging_state()
+
+
+@pytest.mark.parametrize("placement", ["package", "root"])
+def test_null_handler_does_not_prevent_default_logging(tmp_path, placement):
+    logger_name = f"null_{placement}"
+    package_logger = logging.getLogger(logger_name)
+    root_logger = logging.getLogger()
+    original_root_handlers = root_logger.handlers[:]
+    original_root_level = root_logger.level
+    for handler in package_logger.handlers[:]:
+        handler.close()
+        package_logger.removeHandler(handler)
+    root_logger.handlers.clear()
+
+    try:
+        (package_logger if placement == "package" else root_logger).addHandler(
+            logging.NullHandler()
+        )
+
+        assert configure_default_logging(logger_name, str(tmp_path / "main"))
+    finally:
+        for handler in package_logger.handlers[:]:
+            handler.close()
+            package_logger.removeHandler(handler)
+        root_logger.handlers = original_root_handlers
+        root_logger.setLevel(original_root_level)
+
+
+@pytest.mark.parametrize("placement", ["package", "root"])
+def test_unmarked_handler_still_prevents_default_logging(tmp_path, placement):
+    logger_name = f"unmarked_{placement}"
+    package_logger = logging.getLogger(logger_name)
+    root_logger = logging.getLogger()
+    original_root_handlers = root_logger.handlers[:]
+    original_root_level = root_logger.level
+    for handler in package_logger.handlers[:]:
+        handler.close()
+        package_logger.removeHandler(handler)
+    root_logger.handlers.clear()
+
+    try:
+        (package_logger if placement == "package" else root_logger).addHandler(
+            logging.Handler()
+        )
+
+        assert not configure_default_logging(logger_name, str(tmp_path / "main"))
+    finally:
+        for handler in package_logger.handlers[:]:
+            handler.close()
+            package_logger.removeHandler(handler)
+        root_logger.handlers = original_root_handlers
+        root_logger.setLevel(original_root_level)
+
+
+def test_pytest_root_handler_is_ignored_but_package_handler_is_not():
+    logger_name = "pytest_handler"
+    package_logger = logging.getLogger(logger_name)
+    root_logger = logging.getLogger()
+    original_root_handlers = root_logger.handlers[:]
+    pytest_handler_type = type(
+        "PytestHandler", (logging.Handler,), {"__module__": "_pytest.capture"}
+    )
+    pytest_handler = pytest_handler_type()
+    for handler in package_logger.handlers[:]:
+        handler.close()
+        package_logger.removeHandler(handler)
+    root_logger.handlers.clear()
+
+    try:
+        root_logger.addHandler(pytest_handler)
+        assert not has_logging_handlers(logger_name)
+
+        package_logger.addHandler(pytest_handler)
+        assert has_logging_handlers(logger_name)
+    finally:
+        for handler in package_logger.handlers[:]:
+            handler.close()
+            package_logger.removeHandler(handler)
+        root_logger.handlers = original_root_handlers
+
+
+def test_get_logger_configures_after_marked_package_handler(tmp_path):
+    logger_name = "marked_ordering"
+    package_logger = logging.getLogger(logger_name)
+    marked_handler = logging.Handler()
+    marked_handler.basekit_configures_output = False
+    for handler in package_logger.handlers[:]:
+        handler.close()
+        package_logger.removeHandler(handler)
+    package_logger.addHandler(marked_handler)
+    reset_logging_state()
+
+    try:
+        get_logger(
+            "worker",
+            logger_name=logger_name,
+            log_file_path=str(tmp_path / "main"),
+            level=logging.INFO,
+        )
+
+        assert any(
+            isinstance(handler, DateNamedDailyFileHandler)
+            for handler in package_logger.handlers
+        )
+        assert (tmp_path / f"main_{date.today().isoformat()}.log").exists()
+    finally:
+        for handler in package_logger.handlers[:]:
+            handler.close()
+            package_logger.removeHandler(handler)
         reset_logging_state()
 
 

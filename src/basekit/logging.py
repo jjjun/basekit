@@ -115,14 +115,26 @@ def make_timed_rotating_handler(
     )
 
 
+def _is_output_handler(handler: logging.Handler) -> bool:
+    if isinstance(handler, logging.NullHandler):
+        return False
+    return getattr(handler, "basekit_configures_output", True)
+
+
 def has_logging_handlers(logger_name: str) -> bool:
     """Return whether root or the package logger already has real handlers."""
     root_handlers = [
         handler
         for handler in logging.getLogger().handlers
         if not type(handler).__module__.startswith("_pytest.")
+        and _is_output_handler(handler)
     ]
-    return bool(logging.getLogger(logger_name).handlers or root_handlers)
+    package_handlers = [
+        handler
+        for handler in logging.getLogger(logger_name).handlers
+        if _is_output_handler(handler)
+    ]
+    return bool(package_handlers or root_handlers)
 
 
 def configure_default_logging(

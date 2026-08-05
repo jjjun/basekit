@@ -74,6 +74,19 @@ group-readable logs.
 
 `configure_default_logging()` checks existing root handlers and package handlers before adding file and console handlers. This keeps basekit-friendly packages from overriding application-level logging configuration.
 
+By default, every handler is treated as an output sink. A handler used only for
+capture, metrics, or another side-channel can opt out by setting
+`basekit_configures_output = False` on its class or individual instance. Such a
+handler does not suppress basekit's default file and console handlers.
+
+```python
+capture_handler.basekit_configures_output = False
+```
+
+`logging.NullHandler` is always treated as non-output, so it also does not
+suppress default configuration. The existing `_pytest` root-handler filtering is
+unchanged.
+
 When called through `get_logger()`, default configuration is attempted once per `logger_name`, rather than once per process. A call without `log_file_path` does not consume that attempt, so a later call for the same package can configure logging when it supplies a path. `configure_default_logging()` returns `True` when it installs handlers and `False` when it declines to configure them.
 
 SQLAlchemy echo configuration remains process-global, but a later `get_logger()` call can enable it even if an earlier caller left `sqlalchemy_echo` disabled.
