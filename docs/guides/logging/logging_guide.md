@@ -65,6 +65,10 @@ handler = make_timed_rotating_handler("data/my_package/logs/main")
 ```
 
 Old dated logs are removed after `backup_count` files. The default is `30`.
+New log files default to owner-only permissions (`0o600`). This mode is reapplied
+whenever the active file is opened, including restarts and date rotation. Pass
+`file_mode` when a different mode is required, such as `file_mode=0o640` for
+group-readable logs.
 
 ## Application Logging Policy
 

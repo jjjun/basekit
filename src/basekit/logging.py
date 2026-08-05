@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -8,16 +9,19 @@ _sqlalchemy_logging_initialized = False
 
 
 class DateNamedDailyFileHandler(logging.FileHandler):
-    """Write logs to the active ``<base>_<YYYY-MM-DD>.log`` file."""
+    """Write logs to the active ``<base>_<YYYY-MM-DD>.log`` file securely."""
 
     def __init__(
         self,
         base_path: str,
         backup_count: int = 30,
         encoding: str = "utf-8",
+        *,
+        file_mode: int = 0o600,
     ):
         self.base_path = Path(base_path)
         self.backup_count = backup_count
+        self.file_mode = file_mode
         self.base_path.parent.mkdir(parents=True, exist_ok=True)
         self.current_date = self._today()
         super().__init__(
@@ -26,6 +30,22 @@ class DateNamedDailyFileHandler(logging.FileHandler):
             encoding=encoding,
         )
         self._cleanup_old_logs()
+
+    def _open(self):
+        descriptor = os.open(
+            self.baseFilename,
+            os.O_APPEND | os.O_CREAT | os.O_WRONLY,
+            self.file_mode,
+        )
+        os.close(descriptor)
+        stream = super()._open()
+        try:
+            # Process umask affects creation, so enforce the requested mode
+            # after each open.
+            os.chmod(self.baseFilename, self.file_mode)
+        except OSError:
+            pass
+        return stream
 
     def emit(self, record: logging.LogRecord) -> None:
         today = self._today()
@@ -85,10 +105,14 @@ class DateNamedDailyFileHandler(logging.FileHandler):
 
 
 def make_timed_rotating_handler(
-    base_path: str, backup_count: int = 30
+    base_path: str, backup_count: int = 30, *, file_mode: int = 0o600
 ) -> DateNamedDailyFileHandler:
     """Create a daily rotating handler using ``<base_path>_<YYYY-MM-DD>.log``."""
-    return DateNamedDailyFileHandler(base_path, backup_count=backup_count)
+    return DateNamedDailyFileHandler(
+        base_path,
+        backup_count=backup_count,
+        file_mode=file_mode,
+    )
 
 
 def has_logging_handlers(logger_name: str) -> bool:

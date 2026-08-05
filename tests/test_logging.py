@@ -1,4 +1,7 @@
 import logging
+import os
+import stat
+import sys
 from datetime import date
 
 import pytest
@@ -271,6 +274,81 @@ def test_make_handler_writes_to_dated_active_file(tmp_path, monkeypatch):
     assert active_file.exists()
     assert not (tmp_path / "main").exists()
     assert "active file message" in active_file.read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows does not preserve POSIX modes"
+)
+def test_handler_creates_owner_only_log_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: date(2026, 5, 5),
+    )
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"))
+    handler.close()
+
+    active_file = tmp_path / "main_2026-05-05.log"
+    assert stat.S_IMODE(active_file.stat().st_mode) == 0o600
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows does not preserve POSIX modes"
+)
+def test_handler_applies_owner_only_mode_to_existing_log_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: date(2026, 5, 5),
+    )
+
+    active_file = tmp_path / "main_2026-05-05.log"
+    active_file.touch()
+    os.chmod(active_file, 0o644)
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"))
+    handler.close()
+
+    assert stat.S_IMODE(active_file.stat().st_mode) == 0o600
+
+
+def test_handler_writes_after_date_switch(tmp_path, monkeypatch):
+    current_date = date(2026, 5, 5)
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: current_date,
+    )
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"))
+    current_date = date(2026, 5, 6)
+
+    handler.emit(logging.makeLogRecord({"msg": "rotated file message"}))
+    handler.close()
+
+    active_file = tmp_path / "main_2026-05-06.log"
+    assert "rotated file message" in active_file.read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows does not preserve POSIX modes"
+)
+def test_handler_applies_file_mode_after_date_switch(tmp_path, monkeypatch):
+    current_date = date(2026, 5, 5)
+    monkeypatch.setattr(
+        DateNamedDailyFileHandler,
+        "_today",
+        lambda self: current_date,
+    )
+
+    handler = make_timed_rotating_handler(str(tmp_path / "main"), file_mode=0o640)
+    current_date = date(2026, 5, 6)
+    handler.emit(logging.makeLogRecord({"msg": "rotated file message"}))
+    handler.close()
+
+    active_file = tmp_path / "main_2026-05-06.log"
+    assert stat.S_IMODE(active_file.stat().st_mode) == 0o640
 
 
 def test_handler_writes_when_log_cleanup_cannot_delete_file(tmp_path, monkeypatch):
