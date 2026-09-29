@@ -8,6 +8,22 @@ from pathlib import Path
 from typing import Callable, ClassVar
 
 
+def _resolve_compose_command() -> list[str]:
+    try:
+        result = subprocess.run(
+            ["docker", "compose", "version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return ["docker-compose"]
+
+    if result.returncode == 0:
+        return ["docker", "compose"]
+    return ["docker-compose"]
+
+
 class DockerCommandExecutor:
     """Stateless helpers for docker and docker-compose command execution."""
 
@@ -22,7 +38,7 @@ class DockerCommandExecutor:
         if cwd is None:
             cwd = compose_file.parent
 
-        cmd = ["docker-compose"]
+        cmd = _resolve_compose_command()
         if project_name:
             cmd.extend(["-p", project_name])
         cmd.extend(["-f", str(compose_file)])
@@ -39,9 +55,9 @@ class DockerCommandExecutor:
             return result.stdout if capture_output else None
         except FileNotFoundError as exc:
             raise FileNotFoundError(
-                "docker-compose command not found. "
-                "Please install Docker Desktop: "
-                "https://www.docker.com/products/docker-desktop"
+                "Neither 'docker compose' nor 'docker-compose' command was found. "
+                "Install Docker Engine with the Compose plugin or the standalone "
+                "docker-compose command."
             ) from exc
 
     @staticmethod
@@ -63,9 +79,8 @@ class DockerCommandExecutor:
             return result.stdout.strip()
         except FileNotFoundError as exc:
             raise FileNotFoundError(
-                "docker command not found. "
-                "Please install Docker Desktop: "
-                "https://www.docker.com/products/docker-desktop"
+                "docker command not found. Please install Docker Engine or "
+                "Docker Desktop."
             ) from exc
 
     @staticmethod
@@ -95,9 +110,8 @@ class DockerCommandExecutor:
             )
         except FileNotFoundError as exc:
             raise FileNotFoundError(
-                "docker command not found. "
-                "Please install Docker Desktop: "
-                "https://www.docker.com/products/docker-desktop"
+                "docker command not found. Please install Docker Engine or "
+                "Docker Desktop."
             ) from exc
 
     @staticmethod
@@ -248,6 +262,9 @@ class DockerManager(ABC):
         except subprocess.CalledProcessError as exc:
             print_message("ERROR:", f"Failed to stop container: {exc}")
             sys.exit(1)
+        except FileNotFoundError as exc:
+            print_message("ERROR:", str(exc))
+            sys.exit(1)
 
     def remove(self) -> None:
         try:
@@ -270,6 +287,9 @@ class DockerManager(ABC):
             print_message("OK:", f"{self.get_container_name()} removed")
         except subprocess.CalledProcessError as exc:
             print_message("ERROR:", f"Failed to remove container: {exc}")
+            sys.exit(1)
+        except FileNotFoundError as exc:
+            print_message("ERROR:", str(exc))
             sys.exit(1)
 
     def status(self) -> bool:

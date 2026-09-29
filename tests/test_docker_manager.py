@@ -79,6 +79,36 @@ def test_start_exits_when_compose_command_fails(tmp_path):
             manager.start()
 
 
+def test_stop_exits_when_compose_command_is_missing(tmp_path, capsys):
+    manager = SampleDockerManager(tmp_path)
+    compose_file = manager.get_compose_dir() / "docker-compose.generated.yml"
+    compose_file.write_text("version: '3.8'\n", encoding="utf-8")
+
+    with patch(
+        "basekit.docker_manager.DockerCommandExecutor.run_docker_compose",
+        side_effect=FileNotFoundError("compose command missing"),
+    ):
+        with pytest.raises(SystemExit):
+            manager.stop()
+
+    assert "ERROR: compose command missing" in capsys.readouterr().out
+
+
+def test_remove_exits_when_compose_command_is_missing(tmp_path, capsys):
+    manager = SampleDockerManager(tmp_path)
+    compose_file = manager.get_compose_dir() / "docker-compose.generated.yml"
+    compose_file.write_text("version: '3.8'\n", encoding="utf-8")
+
+    with patch(
+        "basekit.docker_manager.DockerCommandExecutor.run_docker_compose",
+        side_effect=FileNotFoundError("compose command missing"),
+    ):
+        with pytest.raises(SystemExit):
+            manager.remove()
+
+    assert "ERROR: compose command missing" in capsys.readouterr().out
+
+
 def test_stop_returns_when_compose_file_missing(tmp_path):
     manager = SampleDockerManager(tmp_path)
 
@@ -100,8 +130,15 @@ def test_run_docker_compose_builds_expected_command(tmp_path):
     compose_file = tmp_path / "docker-compose.yml"
     compose_file.write_text("version: '3.8'\n", encoding="utf-8")
 
-    with patch("basekit.docker_manager.subprocess.run") as run:
-        run.return_value.stdout = "ok"
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs))
+        if command == ["docker", "compose", "version"]:
+            return subprocess.CompletedProcess(command, 0, stdout="v2", stderr="")
+        return subprocess.CompletedProcess(command, 0, stdout="ok", stderr="")
+
+    with patch("basekit.docker_manager.subprocess.run", side_effect=fake_run):
         result = DockerCommandExecutor.run_docker_compose(
             "up -d",
             compose_file,
@@ -110,9 +147,13 @@ def test_run_docker_compose_builds_expected_command(tmp_path):
         )
 
     assert result == "ok"
-    run.assert_called_once()
-    assert run.call_args.args[0] == [
-        "docker-compose",
+    assert calls[0] == (
+        ["docker", "compose", "version"],
+        {"capture_output": True, "text": True, "check": False},
+    )
+    assert calls[1][0] == [
+        "docker",
+        "compose",
         "-p",
         "project",
         "-f",
@@ -120,6 +161,81 @@ def test_run_docker_compose_builds_expected_command(tmp_path):
         "up",
         "-d",
     ]
+
+
+def test_run_docker_compose_falls_back_to_legacy_command_when_plugin_is_missing(
+    tmp_path,
+):
+    compose_file = tmp_path / "docker-compose.yml"
+    compose_file.write_text("version: '3.8'\n", encoding="utf-8")
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        if command == ["docker", "compose", "version"]:
+            return subprocess.CompletedProcess(
+                command, 1, stdout="", stderr="missing"
+            )
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    with patch("basekit.docker_manager.subprocess.run", side_effect=fake_run):
+        DockerCommandExecutor.run_docker_compose("stop", compose_file)
+
+    assert calls[1][0] == "docker-compose"
+    assert calls[1][-1] == "stop"
+
+
+def test_run_docker_compose_falls_back_when_docker_cli_is_missing(tmp_path):
+    compose_file = tmp_path / "docker-compose.yml"
+    compose_file.write_text("version: '3.8'\n", encoding="utf-8")
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        if command == ["docker", "compose", "version"]:
+            raise FileNotFoundError("docker not found")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    with patch("basekit.docker_manager.subprocess.run", side_effect=fake_run):
+        DockerCommandExecutor.run_docker_compose("stop", compose_file)
+
+    assert calls[1][0] == "docker-compose"
+    assert calls[1][-1] == "stop"
+
+
+def test_run_docker_compose_reports_when_both_commands_are_missing(tmp_path):
+    compose_file = tmp_path / "docker-compose.yml"
+    compose_file.write_text("version: '3.8'\n", encoding="utf-8")
+
+    def fake_run(command, **kwargs):
+        raise FileNotFoundError("command not found")
+
+    with patch("basekit.docker_manager.subprocess.run", side_effect=fake_run):
+        with pytest.raises(FileNotFoundError) as error:
+            DockerCommandExecutor.run_docker_compose("stop", compose_file)
+
+    assert "docker compose" in str(error.value)
+    assert "docker-compose" in str(error.value)
+
+
+def test_get_container_status_has_neutral_docker_install_message():
+    with patch(
+        "basekit.docker_manager.subprocess.run", side_effect=FileNotFoundError
+    ):
+        with pytest.raises(
+            FileNotFoundError, match="Docker Engine or Docker Desktop"
+        ):
+            DockerCommandExecutor.get_container_status("test_container")
+
+
+def test_exec_command_has_neutral_docker_install_message():
+    with patch(
+        "basekit.docker_manager.subprocess.run", side_effect=FileNotFoundError
+    ):
+        with pytest.raises(
+            FileNotFoundError, match="Docker Engine or Docker Desktop"
+        ):
+            DockerCommandExecutor.exec_command("test_container", ["true"])
 
 
 def test_utility_functions(tmp_path, capsys):

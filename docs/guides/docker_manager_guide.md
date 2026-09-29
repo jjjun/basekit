@@ -4,6 +4,17 @@
 
 `basekit.docker_manager` contains shared Docker subprocess helpers and a base class for service managers. It does not import configuration from consuming projects; service-specific managers inject paths and settings.
 
+## Compose Command Selection
+
+Each Compose operation checks whether `docker compose version` succeeds. If it does, the
+manager uses the Docker Compose v2 plugin (`docker compose`). If the Docker CLI is
+unavailable or the plugin check fails, it falls back to the standalone `docker-compose`
+command.
+
+When both commands are installed, the Compose v2 plugin takes precedence. Moving from
+standalone Compose v1 to the plugin may cause the first `up -d` operation to recreate
+containers; named volumes are kept.
+
 ## Basic Manager
 
 ```python
