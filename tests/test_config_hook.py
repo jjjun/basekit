@@ -127,17 +127,44 @@ def test_config_computes_data_and_log_paths(tmp_path):
 
     assert config.data_path == str(tmp_path / "data" / "example")
     assert config.log_path == str(tmp_path / "data" / "example" / "logs")
-    assert config.log_file == ("test" if config.exec_env == "test" else "main")
+    assert config.log_file == (
+        "test" if config.normalized_exec_env == "test" else "main"
+    )
     assert config.log_file_path == str(
         tmp_path / "data" / "example" / "logs" / config.log_file
     )
 
 
-def test_config_log_level_defaults_by_execution_environment(monkeypatch):
+@pytest.mark.parametrize(
+    ("exec_env", "normalized_exec_env", "log_level", "log_file"),
+    [
+        ("prod", "prod", logging.INFO, "main"),
+        ("production", "prod", logging.INFO, "main"),
+        (" Prod ", "prod", logging.INFO, "main"),
+        ("test", "test", logging.DEBUG, "test"),
+        ("TEST", "test", logging.DEBUG, "test"),
+        ("dev", "dev", logging.DEBUG, "main"),
+        (" STAGING ", "staging", logging.DEBUG, "main"),
+        (None, "", logging.DEBUG, "main"),
+    ],
+)
+def test_config_log_level_defaults_by_execution_environment(
+    monkeypatch, exec_env, normalized_exec_env, log_level, log_file
+):
     monkeypatch.delenv("LOG_LEVEL", raising=False)
+    config = Config(exec_env=exec_env)
 
-    assert Config(exec_env="dev").log_level == logging.DEBUG
-    assert Config(exec_env="prod").log_level == logging.INFO
+    assert config.exec_env == exec_env
+    assert config.normalized_exec_env == normalized_exec_env
+    assert config.log_level == log_level
+    assert config.log_file == log_file
+
+
+def test_config_log_file_setter_overrides_default():
+    config = Config(exec_env="TEST")
+    config.log_file = "custom"
+
+    assert config.log_file == "custom"
 
 
 def test_config_log_level_uses_environment_override(monkeypatch):

@@ -19,6 +19,7 @@ from basekit import (
 
 - `root_path`
 - `exec_env`
+- `normalized_exec_env`
 - `auto_create_dirs`
 - `data_path`
 - `log_path`
@@ -119,13 +120,20 @@ When `package_name` is not set, it defaults to:
 <data_path>/logs
 ```
 
-`log_file` defaults to `test` when `EXEC_ENV=test`; otherwise it defaults to `main`.
+`exec_env` retains the value provided to `Config`. `normalized_exec_env` strips
+whitespace, lowercases the value, and maps `production` to `prod`; other values
+pass through after stripping and lowercasing. The `log_file` default is `test`
+when `normalized_exec_env` is `test`; otherwise it is `main`.
+This changes prior logging defaults for values such as `production`, ` Prod `,
+and `TEST`, which now receive the same defaults as normalized `prod` and `test`.
 
-`log_level` defaults to `logging.DEBUG` except when `exec_env` is `prod`, where
-it defaults to `logging.INFO`. Set `LOG_LEVEL` to a case-insensitive logging
-level name such as `WARNING` to override the default. Invalid values raise
-`ValueError` when `log_level` is accessed. Assign `config.log_level` directly
-to override both the environment and the execution-environment default.
+`log_level` defaults to `logging.DEBUG` except when `normalized_exec_env` is
+`prod`, where it defaults to `logging.INFO`. Unknown environment names keep
+their normalized value and use the defaults `main` and `logging.DEBUG`. Set
+`LOG_LEVEL` to a case-insensitive logging level name such as `WARNING` to
+override the default. Invalid values raise `ValueError` when `log_level` is
+accessed. Assign `config.log_file` or `config.log_level` directly to override
+the corresponding default.
 
 ## Testing Notes
 

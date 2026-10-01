@@ -159,10 +159,15 @@ class Config:
         self._log_path = value
 
     @property
+    def normalized_exec_env(self) -> str:
+        exec_env = (self.exec_env or "").strip().lower()
+        return "prod" if exec_env == "production" else exec_env
+
+    @property
     def log_file(self) -> Optional[str]:
         return self._get_or_default(
             "_log_file",
-            "test" if self.exec_env == "test" else "main",
+            "test" if self.normalized_exec_env == "test" else "main",
         )
 
     @log_file.setter
@@ -183,7 +188,7 @@ class Config:
                     raise ValueError(f"Invalid LOG_LEVEL value: {configured_level!r}")
                 return level
 
-        return logging.INFO if self.exec_env == "prod" else logging.DEBUG
+        return logging.INFO if self.normalized_exec_env == "prod" else logging.DEBUG
 
     @log_level.setter
     def log_level(self, value: Optional[int]):
