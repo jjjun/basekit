@@ -70,13 +70,19 @@ class DockerCommandExecutor:
                     "--filter",
                     f"name={container_name}",
                     "--format",
-                    "{{.Status}}",
+                    "{{.Names}}\\t{{.Status}}",
                 ],
                 capture_output=True,
                 text=True,
                 check=True,
             )
-            return result.stdout.strip()
+            for line in result.stdout.splitlines():
+                names, separator, status = line.partition("\t")
+                if not separator:
+                    continue
+                if any(name.strip() == container_name for name in names.split(",")):
+                    return status.strip()
+            return ""
         except FileNotFoundError as exc:
             raise FileNotFoundError(
                 "docker command not found. Please install Docker Engine or "

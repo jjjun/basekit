@@ -126,6 +126,67 @@ def test_status_returns_bool_from_container_status(tmp_path):
         assert manager.status() is False
 
 
+def test_get_container_status_returns_exact_name_match():
+    output = (
+        "mine_py_redis_dev\tUp 10 minutes\n"
+        "mine_py_redis_test\tUp 5 minutes\n"
+        "mine_py_redis\tUp 2 minutes\n"
+    )
+    command = [
+        "docker",
+        "ps",
+        "--filter",
+        "name=mine_py_redis",
+        "--format",
+        "{{.Names}}\\t{{.Status}}",
+    ]
+
+    with patch(
+        "basekit.docker_manager.subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            command, 0, stdout=output, stderr=""
+        ),
+    ) as run:
+        assert (
+            DockerCommandExecutor.get_container_status("mine_py_redis")
+            == "Up 2 minutes"
+        )
+
+    run.assert_called_once_with(
+        command,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
+@pytest.mark.parametrize("container_name", ["x_dev", "abc123_x", "xx"])
+def test_is_container_running_ignores_partial_name_matches(container_name):
+    output = f"{container_name}\tUp 10 minutes\n"
+    command = ["docker", "ps"]
+
+    with patch(
+        "basekit.docker_manager.subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            command, 0, stdout=output, stderr=""
+        ),
+    ):
+        assert DockerCommandExecutor.is_container_running("x") is False
+
+
+def test_is_container_running_for_exact_name():
+    output = "x_dev\tUp 10 minutes\nx\tUp 2 minutes\n"
+    command = ["docker", "ps"]
+
+    with patch(
+        "basekit.docker_manager.subprocess.run",
+        return_value=subprocess.CompletedProcess(
+            command, 0, stdout=output, stderr=""
+        ),
+    ):
+        assert DockerCommandExecutor.is_container_running("x") is True
+
+
 def test_run_docker_compose_builds_expected_command(tmp_path):
     compose_file = tmp_path / "docker-compose.yml"
     compose_file.write_text("version: '3.8'\n", encoding="utf-8")

@@ -43,6 +43,9 @@ class RedisManager(DockerManager):
         )
 ```
 
+Container status helpers match the requested container name exactly, even though
+Docker's name filter can return containers with similar names.
+
 ## Path Contract
 
 `DockerManager` requires `data_path`:
