@@ -70,6 +70,12 @@ whenever the active file is opened, including restarts and date rotation. Pass
 `file_mode` when a different mode is required, such as `file_mode=0o640` for
 group-readable logs.
 
+`BASEKIT_NO_SIDE_EFFECTS=1` (also `true`, `yes`, or `on`) makes
+`configure_default_logging()` and `configure_sqlalchemy_logging()` skip handler
+setup. Directly constructing `DateNamedDailyFileHandler` or calling
+`make_timed_rotating_handler()` still creates the requested log directory and
+file.
+
 ## Application Logging Policy
 
 `configure_default_logging()` checks existing root handlers and package handlers before adding file and console handlers. This keeps basekit-friendly packages from overriding application-level logging configuration.
@@ -90,6 +96,11 @@ unchanged.
 When called through `get_logger()`, default configuration is attempted once per `logger_name`, rather than once per process. A call without `log_file_path` does not consume that attempt, so a later call for the same package can configure logging when it supplies a path. `configure_default_logging()` returns `True` when it installs handlers and `False` when it declines to configure them.
 
 SQLAlchemy echo configuration remains process-global, but a later `get_logger()` call can enable it even if an earlier caller left `sqlalchemy_echo` disabled.
+
+With `BASEKIT_NO_SIDE_EFFECTS` enabled, `get_logger()` skips both logging setup
+helpers. `reset_logging_state()` clears only the once-per-logger-name gate and
+the SQLAlchemy initialization flag; it does not remove handlers and is a test
+helper, not a way to toggle the mode at runtime.
 
 ## SQLAlchemy Logging
 

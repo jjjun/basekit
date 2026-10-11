@@ -4,6 +4,8 @@ from datetime import date
 from pathlib import Path
 from typing import Optional
 
+from basekit.config_hook import _no_side_effects_enabled
+
 _configured_logger_names: set[str] = set()
 _sqlalchemy_logging_initialized = False
 
@@ -143,6 +145,8 @@ def configure_default_logging(
     level: int = logging.DEBUG,
 ) -> bool:
     """Configure a package root logger when the application has no handlers."""
+    if _no_side_effects_enabled():
+        return False
     if has_logging_handlers(logger_name) or not log_file_path:
         return False
 
@@ -170,7 +174,7 @@ def configure_sqlalchemy_logging(
     log_file_path: Optional[str] = None,
 ) -> None:
     """Configure SQLAlchemy engine logging if requested by the caller."""
-    if not enabled:
+    if not enabled or _no_side_effects_enabled():
         return
 
     sqlalchemy_logger = logging.getLogger("sqlalchemy.engine.Engine")
@@ -218,7 +222,11 @@ def get_logger(
         if configure_default_logging(logger_name, log_file_path, level):
             _configured_logger_names.add(logger_name)
 
-    if sqlalchemy_echo and not _sqlalchemy_logging_initialized:
+    if (
+        sqlalchemy_echo
+        and not _sqlalchemy_logging_initialized
+        and not _no_side_effects_enabled()
+    ):
         _sqlalchemy_logging_initialized = True
         configure_sqlalchemy_logging(
             enabled=True,

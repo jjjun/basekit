@@ -9,6 +9,7 @@ import pytest
 from basekit.logging import (
     DateNamedDailyFileHandler,
     configure_default_logging,
+    configure_sqlalchemy_logging,
     get_logger,
     has_logging_handlers,
     make_timed_rotating_handler,
@@ -124,6 +125,81 @@ def test_configure_default_logging_defaults_to_debug_file_and_info_console(tmp_p
         for handler in root_logger.handlers[:]:
             handler.close()
             root_logger.removeHandler(handler)
+
+
+def test_configure_default_logging_skips_when_no_side_effects_are_enabled(
+    monkeypatch, tmp_path
+):
+    logger_name = "no_side_effects_default"
+    root_logger = logging.getLogger(logger_name)
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+
+    monkeypatch.setenv("BASEKIT_NO_SIDE_EFFECTS", "on")
+
+    assert not configure_default_logging(logger_name, str(tmp_path / "main"))
+    assert not root_logger.handlers
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_get_logger_configures_after_no_side_effects_mode_is_disabled(
+    monkeypatch, tmp_path
+):
+    logger_name = "no_side_effects_late"
+    root_logger = logging.getLogger(logger_name)
+    for handler in root_logger.handlers[:]:
+        handler.close()
+        root_logger.removeHandler(handler)
+    reset_logging_state()
+
+    try:
+        monkeypatch.setenv("BASEKIT_NO_SIDE_EFFECTS", "yes")
+        get_logger(
+            "first",
+            logger_name=logger_name,
+            log_file_path=str(tmp_path / "main"),
+        )
+
+        assert not root_logger.handlers
+        assert list(tmp_path.iterdir()) == []
+
+        monkeypatch.delenv("BASEKIT_NO_SIDE_EFFECTS")
+        get_logger(
+            "second",
+            logger_name=logger_name,
+            log_file_path=str(tmp_path / "main"),
+        )
+
+        assert len(root_logger.handlers) == 2
+        assert (tmp_path / f"main_{date.today().isoformat()}.log").exists()
+    finally:
+        for handler in root_logger.handlers[:]:
+            handler.close()
+            root_logger.removeHandler(handler)
+        reset_logging_state()
+
+
+def test_configure_sqlalchemy_logging_skips_when_no_side_effects_are_enabled(
+    monkeypatch, tmp_path
+):
+    sqlalchemy_logger = logging.getLogger("sqlalchemy.engine.Engine")
+    original_handlers = sqlalchemy_logger.handlers[:]
+    original_level = sqlalchemy_logger.level
+    sqlalchemy_logger.handlers.clear()
+    monkeypatch.setenv("BASEKIT_NO_SIDE_EFFECTS", "1")
+
+    try:
+        configure_sqlalchemy_logging(
+            enabled=True,
+            log_file_path=str(tmp_path / "sqlalchemy"),
+        )
+
+        assert not sqlalchemy_logger.handlers
+        assert list(tmp_path.iterdir()) == []
+    finally:
+        sqlalchemy_logger.handlers = original_handlers
+        sqlalchemy_logger.setLevel(original_level)
 
 
 @pytest.mark.parametrize(

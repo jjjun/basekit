@@ -10,7 +10,14 @@ from typing import Optional, Union
 
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def _no_side_effects_enabled() -> bool:
+    value = os.getenv("BASEKIT_NO_SIDE_EFFECTS", "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+if not _no_side_effects_enabled():
+    load_dotenv()
 
 
 class ConfigHookLoadError(RuntimeError):
@@ -73,7 +80,9 @@ class Config:
     package_name: Optional[str] = field(default=None, init=False)
     root_path: Optional[str] = field(default=None)
     exec_env: str = field(default=os.getenv("EXEC_ENV", "dev"))
-    auto_create_dirs: bool = field(default=True)
+    auto_create_dirs: bool = field(
+        default_factory=lambda: not _no_side_effects_enabled()
+    )
     _data_path: Optional[str] = field(default=None, init=False, repr=False)
     _log_path: Optional[str] = field(default=None, init=False, repr=False)
     _log_file: Optional[str] = field(default=None, init=False, repr=False)

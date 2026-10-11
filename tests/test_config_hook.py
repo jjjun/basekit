@@ -1,4 +1,6 @@
 import logging
+import os
+import subprocess
 import sys
 from types import ModuleType
 
@@ -133,6 +135,73 @@ def test_config_computes_data_and_log_paths(tmp_path):
     assert config.log_file_path == str(
         tmp_path / "data" / "example" / "logs" / config.log_file
     )
+
+
+@pytest.mark.parametrize("value", [" 1 ", "TRUE", " yes ", "On"])
+def test_config_disables_directory_creation_when_no_side_effects_enabled(
+    monkeypatch, tmp_path, value
+):
+    monkeypatch.setenv("BASEKIT_NO_SIDE_EFFECTS", value)
+    config = Config(root_path=str(tmp_path))
+
+    assert config.auto_create_dirs is False
+    assert Config(auto_create_dirs=True).auto_create_dirs is True
+
+    config.init()
+
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("value", [None, "false", " off ", ""])
+def test_config_keeps_directory_creation_enabled_for_unrecognized_flag_values(
+    monkeypatch, value
+):
+    if value is None:
+        monkeypatch.delenv("BASEKIT_NO_SIDE_EFFECTS", raising=False)
+    else:
+        monkeypatch.setenv("BASEKIT_NO_SIDE_EFFECTS", value)
+
+    assert Config().auto_create_dirs is True
+
+
+def test_load_dotenv_is_skipped_when_no_side_effects_are_enabled(
+    monkeypatch, tmp_path
+):
+    (tmp_path / ".env").write_text("MARKER=loaded\n", encoding="utf-8")
+    monkeypatch.delenv("MARKER", raising=False)
+    environment = os.environ.copy()
+    environment.pop("MARKER", None)
+    environment.pop("BASEKIT_NO_SIDE_EFFECTS", None)
+
+    result_with_dotenv = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import basekit.config_hook, os; print(os.getenv('MARKER'))",
+        ],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    environment["BASEKIT_NO_SIDE_EFFECTS"] = "true"
+    result_without_dotenv = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import basekit.config_hook, os; print(os.getenv('MARKER'))",
+        ],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert result_with_dotenv.stdout.strip() == "loaded"
+    assert result_without_dotenv.stdout.strip() == "None"
 
 
 @pytest.mark.parametrize(

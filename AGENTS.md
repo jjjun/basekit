@@ -84,6 +84,7 @@ basekit/
 
 - `CONFIG_HOOK`: optional hook path in `package.module:function_name` format. If the function name is omitted, `hook_config` is used.
 - `EXEC_ENV`: environment name used by `Config`; defaults to `dev`, is stripped and lowercased, and maps `production` to `prod`. `EXEC_ENV=test` changes the default `log_file` to `test`.
+- `BASEKIT_NO_SIDE_EFFECTS`: when set to `1`, `true`, `yes`, or `on` (case-insensitive, whitespace-trimmed) before importing basekit, skips dotenv loading, defaults `Config.auto_create_dirs` to `False`, and disables logging setup helpers. An explicit `auto_create_dirs` argument overrides the flag.
 
 ## Commands
 
