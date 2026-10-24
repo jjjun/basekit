@@ -40,7 +40,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.issuekit]
-disabled_agents = ["kimi"]
+disabled_agents = ["kimi", "codex"]
 worker_accept_directed = true
 project = "basekit"
 recent_count = 30
@@ -48,5 +48,5 @@ ascii_id_threshold = 1
 issues_dir = "docs/issues"
 
 [tool.issuekit.triage]
-author_agent = "codex"
+author_agent = "claude"
 trusted_origins = ["fast-domain"]
